@@ -1,9 +1,10 @@
 import { CloudFormationCustomResourceEvent } from 'aws-lambda';
-import { SecretsManager } from 'aws-sdk';
-import { ReplicaRegionType } from 'aws-sdk/clients/secretsmanager';
-import { generateKeyPair } from 'crypto';
-import * as https from 'https';
-import { promisify } from 'util';
+import {
+  SecretsManager,
+  type ReplicaRegionType,
+} from '@aws-sdk/client-secrets-manager';
+import { generateKeyPairSync } from 'crypto';
+import * as https from 'node:https';
 
 export interface CreateKeyPairResourceProperties {
   readonly Name: string;
@@ -90,12 +91,23 @@ async function createKeyPair(
   props: CreateKeyPairResourceProperties,
 ): Promise<void> {
   try {
-    const { publicKey, privateKey } = await exportKeyPair();
+    const { publicKey, privateKey } = generateKeyPair();
 
     console.log(publicKey);
 
-    const publicKeyArn = await createPublicKeySecret(publicKey, props);
-    const privateKeyArn = await createPrivateKeySecret(privateKey, props);
+    const publicKeyArn = await saveSecret(
+      `${props.Name}/public`,
+      publicKey.toString(),
+      `${props.Description} (Public Key)`,
+      props.SecretRegions,
+    );
+
+    const privateKeyArn = await saveSecret(
+      `${props.Name}/private`,
+      privateKey.toString(),
+      `${props.Description} (Private Key)`,
+      props.SecretRegions,
+    );
 
     console.log(publicKeyArn);
     console.log(privateKeyArn);
@@ -117,11 +129,11 @@ async function createKeyPair(
   }
 }
 
-async function exportKeyPair(): Promise<{
+function generateKeyPair(): {
   publicKey: string | Buffer;
   privateKey: string | Buffer;
-}> {
-  const { publicKey, privateKey } = await promisify(generateKeyPair)('rsa', {
+} {
+  const { publicKey, privateKey } = generateKeyPairSync('rsa', {
     modulusLength: 2048,
   });
 
@@ -147,45 +159,21 @@ function getSecretReplicaRegions(
   });
 }
 
-async function createPublicKeySecret(
-  publicKey: string | Buffer,
-  props: CreateKeyPairResourceProperties,
+async function saveSecret(
+  secretId: string,
+  secretString: string,
+  description: string,
+  regions?: string[] | undefined,
 ): Promise<string> {
-  const name = `${props.Name}/public`;
-
-  const { ARN } = await secretsManager
-    .createSecret({
-      Name: name,
-      Description: `${props.Description} (Public Key)`,
-      SecretString: publicKey.toString(),
-      AddReplicaRegions: getSecretReplicaRegions(props.SecretRegions),
-    })
-    .promise();
+  const { ARN } = await secretsManager.createSecret({
+    Name: secretId,
+    Description: description,
+    SecretString: secretString,
+    AddReplicaRegions: getSecretReplicaRegions(regions),
+  });
 
   if (!ARN) {
-    throw new Error(`ARN for Secrets Manager secret ${name} not found.`);
-  }
-
-  return ARN;
-}
-
-async function createPrivateKeySecret(
-  privateKey: string | Buffer,
-  props: CreateKeyPairResourceProperties,
-): Promise<string> {
-  const name = `${props.Name}/private`;
-
-  const { ARN } = await secretsManager
-    .createSecret({
-      Name: name,
-      Description: `${props.Description} (Private Key)`,
-      SecretString: privateKey.toString(),
-      AddReplicaRegions: getSecretReplicaRegions(props.SecretRegions),
-    })
-    .promise();
-
-  if (!ARN) {
-    throw new Error(`ARN for Secrets Manager secret ${name} not found.`);
+    throw new Error(`ARN for Secrets Manager secret ${secretId} not found.`);
   }
 
   return ARN;
@@ -196,8 +184,8 @@ async function deleteKeyPair(
   props: CreateKeyPairResourceProperties,
 ): Promise<void> {
   try {
-    const publicKeyArn = await deletePublicKeySecret(props);
-    const privateKeyArn = await deletePrivateKeySecret(props);
+    const publicKeyArn = await deleteKeySecret(`${props.Name}/public`);
+    const privateKeyArn = await deleteKeySecret(`${props.Name}/private`);
 
     await sendResponse(event, 'SUCCESS', {
       PublicKeyArn: publicKeyArn,
@@ -215,53 +203,21 @@ async function deleteKeyPair(
   }
 }
 
-async function deletePublicKeySecret(
-  props: CreateKeyPairResourceProperties,
-): Promise<string | undefined> {
-  const secretId = `${props.Name}/public`;
-
+async function deleteKeySecret(secretId: string): Promise<string | undefined> {
   if (await secretExists(secretId)) {
-    const { ARN } = await secretsManager
-      .deleteSecret({
-        SecretId: secretId,
-        ForceDeleteWithoutRecovery: true,
-      })
-      .promise();
-
-    return ARN;
-  }
-}
-
-async function deletePrivateKeySecret(
-  props: CreateKeyPairResourceProperties,
-): Promise<string | undefined> {
-  const secretId = `${props.Name}/private`;
-
-  if (await secretExists(secretId)) {
-    const { ARN } = await secretsManager
-      .deleteSecret({
-        SecretId: secretId,
-        ForceDeleteWithoutRecovery: true,
-      })
-      .promise();
+    const { ARN } = await secretsManager.deleteSecret({
+      SecretId: secretId,
+      ForceDeleteWithoutRecovery: true,
+    });
 
     return ARN;
   }
 }
 
 async function secretExists(secretId: string): Promise<boolean> {
-  const params: SecretsManager.ListSecretsRequest = {
-    Filters: [
-      {
-        Key: 'name',
-        Values: [secretId],
-      },
-    ],
-  };
+  const { SecretList } = await secretsManager.listSecrets({
+    Filters: [{ Key: 'name', Values: [secretId] }],
+  });
 
-  const { SecretList: secretList } = await secretsManager
-    .listSecrets(params)
-    .promise();
-
-  return !!secretList && secretList?.length > 0;
+  return !!SecretList && SecretList?.length > 0;
 }

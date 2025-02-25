@@ -6,15 +6,13 @@
   "main": "index.js",
   "scripts": {
     "build": "tsc",
-    "bundle": "esbuild index.ts --outdir=dist --bundle --minify --sourcemap --platform=node --target=node16 --external:aws-sdk"
+    "bundle": "esbuild index.ts --outdir=dist --bundle --minify --sourcemap --platform=node --target=node22 --external:@aws-sdk/client-secrets-manager"
   },
   "devDependencies": {
-    "@types/aws-lambda": "^8.10.114",
+    "@types/aws-lambda": "^8.10.147",
     "aws-lambda": "^1.0.7",
-    "esbuild": "^0.17.15",
-    "typescript": "~4.9.5"
-  },
-  "dependencies": {
-    "aws-sdk": "^2.1352.0"
+    "esbuild": "^0.25.0",
+    "typescript": "^5.7.3",
+    "@aws-sdk/client-secrets-manager": "^3.750.0"
   }
 }

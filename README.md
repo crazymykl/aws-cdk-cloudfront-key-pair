@@ -21,7 +21,7 @@ secrets.
 To install and use this package, install the following packages using your package manager (e.g. npm):
 
 - aws-cdk-cloudfront-key-pair
-- aws-cdk-lib (^2.0.0)
+- aws-cdk-lib (^2.80.0)
 - constructs (^10.0.0)
 
 ```sh

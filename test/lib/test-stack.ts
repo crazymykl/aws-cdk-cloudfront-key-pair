@@ -1,6 +1,6 @@
 import * as cdk from 'aws-cdk-lib';
 import { Construct } from 'constructs';
-import { CloudFrontKeyPair } from '../../lib/cloudfront-key-pair';
+import { CloudFrontKeyPair } from '../../lib';
 
 export class TestStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {

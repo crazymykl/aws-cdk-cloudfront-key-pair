@@ -45,12 +45,12 @@ export class KeyPair extends Construct {
       {
         description: 'Custom CFN resource: Create Key Pair',
         timeout: Duration.seconds(10),
-        runtime: lambda.Runtime.NODEJS_16_X,
+        runtime: lambda.Runtime.NODEJS_22_X,
         entry: path.join(projectRoot, 'index.ts'),
         depsLockFilePath: path.join(projectRoot, 'package-lock.json'),
         projectRoot,
         bundling: {
-          externalModules: ['aws-sdk'],
+          externalModules: ['@aws-sdk/client-secrets-manager'],
         },
       },
     );
