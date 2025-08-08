@@ -1,15 +1,15 @@
 {
   "name": "aws-cdk-cloudfront-key-pair",
   "description": "AWS CDK L3 construct for managing CloudFront trusted key group key pairs",
-  "version": "0.1.0",
+  "version": "1.0.1",
   "author": {
     "name": "balzanelli",
     "url": "https://balzanel.li/"
   },
-  "homepage": "https://github.com/balzanelli/aws-cdk-cloudfront-key-pair",
+  "homepage": "https://github.com/crazymykl/aws-cdk-cloudfront-key-pair",
   "repository": {
     "type": "git",
-    "url": "https://github.com/balzanelli/aws-cdk-cloudfront-key-pair.git"
+    "url": "https://github.com/crazymykl/aws-cdk-cloudfront-key-pair.git"
   },
   "license": "MIT",
   "keywords": [
@@ -23,20 +23,21 @@
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
   "scripts": {
+    "prepare": "npm run build",
     "build": "tsc",
     "watch": "tsc -w",
     "semantic-release": "semantic-release"
   },
   "devDependencies": {
     "@types/node": "^22.13.5",
-    "aws-cdk-lib": "^2.80.0",
+    "aws-cdk-lib": "^2.210.0",
     "constructs": "^10.0.0",
     "prettier": "^3.5.2",
-    "semantic-release": "^21.0.1",
+    "semantic-release": "^24.2.7",
     "typescript": "~4.9.5"
   },
   "peerDependencies": {
-    "aws-cdk-lib": "^2.80.0",
+    "aws-cdk-lib": "^2.210.0",
     "constructs": "^10.0.0"
   }
 }
