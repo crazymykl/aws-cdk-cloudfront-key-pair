@@ -11,6 +11,9 @@ export class CloudFrontKeyPair extends Construct {
   /** @readonly Generated key pair */
   readonly keyPair: KeyPair;
 
+  /** @readonly Generated CloudFront public key ID */
+  readonly publicKeyIdSecretArn: string;
+
   constructor(scope: Construct, id: string, props: CloudFrontKeyPairProps) {
     super(scope, id);
 
@@ -24,15 +27,19 @@ export class CloudFrontKeyPair extends Construct {
       encodedKey: this.keyPair.publicKey,
     });
 
-    new secretsmanager.CfnSecret(this, 'PublicKeyIdSecret', {
-      name: `${props.name}/public-key-id`,
-      description: `${props.description} (Public Key ID)`,
-      secretString: this.publicKey.publicKeyId,
-      replicaRegions: props.secretRegions?.map((region) => {
-        return {
-          region,
-        };
-      }),
-    })
+    this.publicKeyIdSecretArn = new secretsmanager.CfnSecret(
+      this,
+      'PublicKeyIdSecret',
+      {
+        name: `${props.name}/public-key-id`,
+        description: `${props.description} (Public Key ID)`,
+        secretString: this.publicKey.publicKeyId,
+        replicaRegions: props.secretRegions?.map((region) => {
+          return {
+            region,
+          };
+        }),
+      },
+    ).attrId;
   }
 }

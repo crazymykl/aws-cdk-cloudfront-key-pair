@@ -1,9 +1,9 @@
 {
   "name": "aws-cdk-cloudfront-key-pair",
   "description": "AWS CDK L3 construct for managing CloudFront trusted key group key pairs",
-  "version": "1.0.1",
+  "version": "2.0.0",
   "author": {
-    "name": "balzanelli",
+    "name": "balzanelli + crazymykl",
     "url": "https://balzanel.li/"
   },
   "homepage": "https://github.com/crazymykl/aws-cdk-cloudfront-key-pair",
